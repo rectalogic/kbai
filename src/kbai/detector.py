@@ -2,9 +2,8 @@ import typing as ta
 from dataclasses import dataclass
 
 import torch
-from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
-
 from PIL import Image
+from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
 
 @dataclass
