@@ -20,3 +20,26 @@ debug = []
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.11.2",
+    "ruff>=0.6.3",
+]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    # Pyflakes
+    "F",
+    # Pycodestyle
+    "E",
+    "W",
+    # isort
+    "I001"
+]
