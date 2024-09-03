@@ -1,0 +1,22 @@
+[project]
+name = "kbai"
+version = "0.1.0"
+description = "Ken Burns AI"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "httpx>=0.27.2",
+    "pillow>=10.4.0",
+    "torch>=2.4.0",
+    "transformers>=4.44.2",
+]
+
+[project.scripts]
+hello = "kbai:hello"
+
+[project.optional-dependencies]
+debug = []
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
