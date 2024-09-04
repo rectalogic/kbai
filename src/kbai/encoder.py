@@ -20,10 +20,17 @@ def encode(size: Size, fps: int, images: list[ImageBoxes], outfile: pathlib.Path
         else:
             fitscale = size.width / image.size.width
         zoomsize = image.size * fitscale
+        zoomduration = duration * fps
+        zoom = 2  # XXX hardcode for now, need to compute
+        translate_x = 0  #XXX hardcode for now, normalized -1..0..1
+        translate_y = 0
         filterchain = (
-            f"[{i}]zoompan=z=1:s={zoomsize}:fps={fps}:d={duration * fps},"
-            f"crop=w={size.width}:h={size.height},"
-            f"setsar=1[{i}pz]"
+            f"[{i}]zoompan=z=zoom+{zoom / zoomduration}"
+            f":x=(iw/2+iw*{translate_x})-(iw/zoom/2)"
+            f":y=(ih/2+ih*{translate_y})-(ih/zoom/2)"
+            f":s={zoomsize}:fps={fps}:d={zoomduration}"
+            f",crop=w={size.width}:h={size.height}"
+            f",setsar=1[{i}pz]"
         )
         filters.append(filterchain)
 
@@ -41,7 +48,7 @@ if __name__ == "__main__":
         ImageBoxes("/Users/aw/Desktop/cat.jpg", Size(640, 480), []),
         ImageBoxes("/Users/aw/Pictures/blackflag.jpg", Size(336, 400), []),
         ImageBoxes(
-            "/Users/aw/Projects/rectalogic/mediafx-qt/tests/fixtures/assets/road.jpg", Size(1024, 768), []
+            "/Users/aw/Projects/rectalogic/mediafx-qt/tests/fixtures/assets/bridge.jpg", Size(1024, 768), []
         ),
     ]
     encode(Size(640, 360), 30, images, "/tmp/pz.mp4")

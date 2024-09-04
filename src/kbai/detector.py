@@ -1,19 +1,11 @@
 import typing as ta
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fractions import Fraction
 
 import torch
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
 from .image import ImageSrc
-
-
-@dataclass
-class Box:
-    x1: float
-    y1: float
-    x2: float
-    y2: float
 
 
 @dataclass
@@ -32,6 +24,17 @@ class Size:
 
     def __str__(self):
         return f"{self.width}x{self.height}"
+
+@dataclass
+class Box:
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+    size: Size = field(init=False)
+
+    def __post_init__(self):
+        self.size = Size(self.x2 - self.x1, self.y2 - self.y1)
 
 
 @dataclass
