@@ -1,5 +1,3 @@
-import typing as ta
-
 from PIL import Image, ImageDraw
 
 from .detector import ImageBoxes

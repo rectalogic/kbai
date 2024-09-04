@@ -26,13 +26,13 @@ class Size:
         return Fraction(self.width, self.height)
 
     def __mul__(self, other: ta.Any):
-        if isinstance(other, (int, float, Fraction)):
+        if isinstance(other, int | float | Fraction):
             return Size(round(self.width * other), round(self.height * other))
         return NotImplemented
 
     def __str__(self):
         return f"{self.width}x{self.height}"
-    
+
 
 @dataclass
 class ImageBoxes:
