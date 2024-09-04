@@ -15,14 +15,11 @@ def encode(size: Size, fps: int, images: list[ImageBoxes], outfile: pathlib.Path
     for i, image in enumerate(images):
         # Compute a zoompan size that is object-fit=cover of the output size
         # XXX also support object-fit=contain, with a pad filter
-        if image.size.fraction > size.fraction:
-            fitscale = size.height / image.size.height
-        else:
-            fitscale = size.width / image.size.width
+        fitscale = max(size.width / image.size.width, size.height / image.size.height)
         zoomsize = image.size * fitscale
         zoomduration = duration * fps
         zoom = 2  # XXX hardcode for now, need to compute
-        translate_x = 0  #XXX hardcode for now, normalized -1..0..1
+        translate_x = 0  # XXX hardcode for now, normalized -1..0..1
         translate_y = 0
         filterchain = (
             f"[{i}]zoompan=z=zoom+{zoom / zoomduration}"

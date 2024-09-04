@@ -25,6 +25,7 @@ class Size:
     def __str__(self):
         return f"{self.width}x{self.height}"
 
+
 @dataclass
 class Box:
     x1: float
