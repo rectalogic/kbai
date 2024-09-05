@@ -1,8 +1,12 @@
 from .debug import debug_image
-from .detector import Detector
-from .image import load
+from .detector import Detector, Size
+from .encoder import encode
+from .image import load_image
 
-image = load("http://images.cocodataset.org/val2017/000000039769.jpg")
-detector = Detector()
-image_boxes = detector.detect(image, ["a cat", "a remote control"])
-debug_image(image.image, image_boxes)
+# XXX debugging
+if __name__ == "__main__":
+    image = load_image("/Users/aw/Downloads/9-640x480.jpg")
+    detector = Detector()
+    image_boxes = detector.detect(image, ["a phone"])
+    # debug_image(image.image, image_boxes)
+    encode(Size(320, 240), 30, [image_boxes], 3, "/tmp/pz2.mp4")

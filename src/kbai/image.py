@@ -11,14 +11,13 @@ class ImageSrc:
     src: str
 
 
-def load(src: str) -> ImageSrc:
+def load_image(src: str) -> ImageSrc:
     url = httpx.URL(src)
     if url.is_absolute_url:
         response = httpx.get(url, follow_redirects=True)
         response.raise_for_status()
         image = Image.open(io.BytesIO(response.content))
     else:
-        with open(src, "rb") as f:
-            image = Image.open(f.read())
+        image = Image.open(src)
 
     return ImageSrc(image, src)

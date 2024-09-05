@@ -43,7 +43,7 @@ class Box:
 
     @cached_property
     def center(self) -> tuple[float, float]:
-        return (self.xmax - self.xmin) / 2, (self.ymax - self.ymin) / 2
+        return self.xmin + self.size.width / 2, self.ymin + self.size.height / 2
 
     def scaled(self, scale: float) -> Box:
         return Box(
@@ -78,8 +78,12 @@ class Detector:
         self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(self.device)
 
     def detect(self, image: ImageSrc, features: ta.Sequence[str]) -> ImageBoxes:
+        if not features:
+            return ImageBoxes(image.src, Size(*image.image.size), [])
+
         # End each feature with a dot
         text = " ".join(feature if feature.endswith(".") else f"{feature}." for feature in features)
+
         inputs = self.processor(images=image.image, text=text, return_tensors="pt").to(self.device)
         with torch.no_grad():
             outputs = self.model(**inputs)
@@ -91,4 +95,7 @@ class Detector:
             text_threshold=0.3,
             target_sizes=[image.image.size[::-1]],
         )
-        return ImageBoxes(image.src, Size(*image.image.size), [Box(*box) for box in results[0]["boxes"]])
+        # XXX test if not features found, what is results?
+        return ImageBoxes(
+            image.src, Size(*image.image.size), [Box(*box.tolist()) for box in results[0]["boxes"]]
+        )

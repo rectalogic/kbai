@@ -26,14 +26,14 @@ def encode(
         if image.boxes:
             # Just use first box for now
             scaled_box = image.boxes[0].scaled(image_fit_scale)
+            # Normalized translation, -1..0..1
+            translate_x = (2 * scaled_box.center[0] / zoom_image_size.width) - 1
+            translate_y = (2 * scaled_box.center[1] / zoom_image_size.height) - 1
             # Scale so box is object-fit=contain of the scaled image
             zoom = min(
                 zoom_image_size.width / scaled_box.size.width,
                 zoom_image_size.height / scaled_box.size.height,
             )
-            # Normalized translation, -1..0..1
-            translate_x = (2 * scaled_box.center[0] / zoom_image_size.width) - 1
-            translate_y = 1 - (2 * scaled_box.center[1] / zoom_image_size.height)
             z_filter = f"z=zoom+{zoom / zoom_duration}"
         else:
             translate_x = 0
