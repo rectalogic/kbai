@@ -42,8 +42,8 @@ def encode(
 
         filterchain = (
             f"[{i}]zoompan={z_filter}"
-            f":x=(iw/2+iw*{translate_x})-(iw/zoom/2)"
-            f":y=(ih/2+ih*{translate_y})-(ih/zoom/2)"
+            f":x=(iw+iw*{translate_x})/2-(iw/zoom/2)"
+            f":y=(ih+ih*{translate_y})/2-(ih/zoom/2)"
             f":s={zoom_image_size}:fps={fps}:d={zoom_duration}"
             f",crop=w={encode_size.width}:h={encode_size.height}"
             f",setsar=1[{i}pz]"
