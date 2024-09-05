@@ -38,6 +38,8 @@ class Box:
     size: Size = field(init=False)
 
     def __post_init__(self) -> None:
+        if self.xmin >= self.xmax or self.ymin >= self.ymax:
+            raise ValueError("Invalid Box")
         # We are frozen so can't assign to self.size
         object.__setattr__(self, "size", Size(round(self.xmax - self.xmin), round(self.ymax - self.ymin)))
 
