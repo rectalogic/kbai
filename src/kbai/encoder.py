@@ -33,6 +33,7 @@ def encode(
             zoom = min(
                 zoom_image_size.width / scaled_box.size.width,
                 zoom_image_size.height / scaled_box.size.height,
+                10,  # Max allowed zoom is 10
             )
             z_filter = f"z=zoom+{zoom / zoom_duration}"
         else:

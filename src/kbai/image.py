@@ -20,4 +20,7 @@ def load_image(src: str) -> ImageSrc:
     else:
         image = Image.open(src)
 
+    # DINO can't handle alpha
+    if image.mode in ("RGBA", "LA"):
+        image = image.convert("RGB")
     return ImageSrc(image, src)
