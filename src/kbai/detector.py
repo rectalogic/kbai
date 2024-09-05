@@ -1,6 +1,9 @@
+from __future__ import annotations
+
 import typing as ta
 from dataclasses import dataclass, field
 from fractions import Fraction
+from functools import cached_property
 
 import torch
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
@@ -8,34 +11,47 @@ from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 from .image import ImageSrc
 
 
-@dataclass
+@dataclass(frozen=True)
 class Size:
     width: int
     height: int
 
-    @property
+    @cached_property
     def fraction(self) -> Fraction:
         return Fraction(self.width, self.height)
 
-    def __mul__(self, other: ta.Any):
+    def __mul__(self, other: ta.Any) -> Size:
         if isinstance(other, int | float | Fraction):
             return Size(round(self.width * other), round(self.height * other))
         return NotImplemented
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.width}x{self.height}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Box:
-    x1: float
-    y1: float
-    x2: float
-    y2: float
+    xmin: float
+    ymin: float
+    xmax: float
+    ymax: float
     size: Size = field(init=False)
 
-    def __post_init__(self):
-        self.size = Size(self.x2 - self.x1, self.y2 - self.y1)
+    def __post_init__(self) -> None:
+        # We are frozen so can't assign to self.size
+        object.__setattr__(self, "size", Size(round(self.xmax - self.xmin), round(self.ymax - self.ymin)))
+
+    @cached_property
+    def center(self) -> tuple[float, float]:
+        return (self.xmax - self.xmin) / 2, (self.ymax - self.ymin) / 2
+
+    def scaled(self, scale: float) -> Box:
+        return Box(
+            self.xmin * scale,
+            self.ymin * scale,
+            self.xmax * scale,
+            self.ymax * scale,
+        )
 
 
 @dataclass
@@ -73,6 +89,6 @@ class Detector:
             inputs.input_ids,
             box_threshold=0.4,
             text_threshold=0.3,
-            target_sizes=[image.size[::-1]],
+            target_sizes=[image.image.size[::-1]],
         )
-        return ImageBoxes(image.src, Fraction(*image.size), [Box(*box) for box in results[0]["boxes"]])
+        return ImageBoxes(image.src, Size(*image.image.size), [Box(*box) for box in results[0]["boxes"]])

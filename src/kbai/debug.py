@@ -4,7 +4,10 @@ from .detector import ImageBoxes
 
 
 def debug_image(image: Image.Image, image_boxes: ImageBoxes) -> None:
+    """
+    Draw outline boxes on the image
+    """
     draw = ImageDraw.Draw(image)
     for box in image_boxes.boxes:
-        draw.rectangle((box.x1, box.y1, box.x2, box.y2), outline="red")
+        draw.rectangle((box.xmin, box.ymin, box.xmax, box.ymax), outline="red")
     image.show()

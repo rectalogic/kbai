@@ -10,3 +10,8 @@ fix:
 	@echo "🚀 ruff format"
 	@uv run ruff format
 	@uv run ruff check --fix
+
+.PHONY: check
+typecheck:
+	@echo "🚀 mypy"
+	@-uv run mypy
