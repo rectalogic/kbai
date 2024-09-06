@@ -2,7 +2,8 @@ import itertools
 import pathlib
 import subprocess
 
-from .detector import ImageBoxes, Size
+from .detector import ImageBoxes
+from .structs import Size
 
 
 def encode(
@@ -35,7 +36,8 @@ def encode(
                 zoom_image_size.height / scaled_box.size.height,
                 10,  # Max allowed zoom is 10
             )
-            z_filter = f"z=zoom+{zoom / zoom_duration}"
+            # Don't start incrementing z until after the first frame
+            z_filter = f"z=if(gt(on\\,0)\\,zoom+{zoom / zoom_duration}\\,1)"
         else:
             translate_x = 0
             translate_y = 0

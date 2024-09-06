@@ -1,6 +1,6 @@
 from PIL import Image, ImageDraw
 
-from .detector import ImageBoxes
+from .structs import ImageBoxes
 
 
 def debug_image(image: Image.Image, image_boxes: ImageBoxes) -> None:

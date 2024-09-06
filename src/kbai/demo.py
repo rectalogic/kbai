@@ -1,7 +1,8 @@
 from .debug import debug_image
-from .detector import Detector, Size
+from .detector import Detector
 from .encoder import encode
 from .image import load_image
+from .structs import Size
 
 # XXX debugging
 if __name__ == "__main__":

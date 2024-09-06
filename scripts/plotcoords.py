@@ -6,6 +6,7 @@
 # ]
 # ///
 
+# uv run scripts/plotcoords.py
 
 import matplotlib.pyplot as plt
 import numpy as np
