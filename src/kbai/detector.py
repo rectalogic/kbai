@@ -6,7 +6,7 @@ import torch
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
 from .image import ImageSrc
-from .structs import Box, ImageBoxes, Size
+from .structs import AnnotatedBox, ImageBoxes, Size
 
 
 class Detector:
@@ -45,5 +45,10 @@ class Detector:
         )
         # XXX test if not features found, what is results?
         return ImageBoxes(
-            image.src, Size(*image.image.size), [Box(*box.tolist()) for box in results[0]["boxes"]]
+            image.src,
+            Size(*image.image.size),
+            [
+                AnnotatedBox(*box.tolist(), label)
+                for box, label in zip(results[0]["boxes"], results[0]["labels"], strict=True)
+            ],
         )

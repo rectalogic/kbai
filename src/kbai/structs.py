@@ -51,8 +51,13 @@ class Box:
         )
 
 
+@dataclass(frozen=True)
+class AnnotatedBox(Box):
+    annotation: str
+
+
 @dataclass
 class ImageBoxes:
     src: str
     size: Size
-    boxes: list[Box]
+    boxes: list[AnnotatedBox]

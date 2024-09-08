@@ -43,18 +43,34 @@ def encode(
             translate_y = 0
             z_filter = "z=1"
 
-        filterchain = (
-            f"[{i}]zoompan={z_filter}"
-            f":x=(iw+iw*{translate_x})/2-(iw/zoom/2)"
-            f":y=(ih+ih*{translate_y})/2-(ih/zoom/2)"
-            f":s={zoom_image_size}:fps={fps}:d={zoom_duration}"
-            f",crop=w={encode_size.width}:h={encode_size.height}"
-            f",setsar=1[{i}pz]"
+        filterchain = ",".join(
+            f
+            for f in [
+                f"[{i}]zoompan={z_filter}"
+                f":x=(iw+iw*{translate_x})/2-(iw/zoom/2)"
+                f":y=(ih+ih*{translate_y})/2-(ih/zoom/2)"
+                f":s={zoom_image_size}:fps={fps}:d={zoom_duration}",
+                f"crop=w={encode_size.width}:h={encode_size.height}"
+                if zoom_image_size != encode_size
+                else None,
+                "setsar=1",
+            ]
+            if f is not None
         )
+        if len(images) > 1:
+            filterchain = f"{filterchain}[pz{i}]"
         filters.append(filterchain)
 
-    concatsrc = "".join(f"[{i}pz]" for i in range(len(filters)))
-    filters.append(f"{concatsrc}concat=n={len(filters)}")
+        if i > 0:
+            xfade = f"xfade=transition=fade:duration=1:offset={image_duration - 1}"
+            if i == 1:
+                xfade = f"[pz{i - 1}][pz{i}]{xfade}"
+            elif i >= 2:
+                xfade = f"[xf{i - 1}][pz{i}]{xfade}"
+            if i < len(images) - 1:
+                xfade = f"{xfade}[xf{i}]"
+            filters.append(xfade)
+
     command.extend(["-filter_complex", ";".join(filters)])
 
     command.extend(["-r", str(fps), "-s", str(encode_size), "-y", str(outfile)])
