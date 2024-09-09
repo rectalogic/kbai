@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import enum
 import typing as ta
 from dataclasses import dataclass, field
 from fractions import Fraction
 from functools import cached_property
-import enum
 
 
 @dataclass(frozen=True)
@@ -22,7 +22,7 @@ class Size:
         return NotImplemented
 
     def __str__(self) -> str:
-        return f{self.width}x{self.height} : str = "{self.width}x{self.height}"
+        return f"{self.width}x{self.height}"
 
 
 @dataclass(frozen=True)
@@ -35,9 +35,9 @@ class Box:
 
     def __post_init__(self) -> None:
         if self.xmin >= self.xmax or self.ymin >= self.ymax:
-            raise ValueError(Invalid Box : str = "Invalid Box")
+            raise ValueError("Invalid Box")
         # We are frozen so can't assign to self.size
-        object.__setattr__(self, size : str = "size", Size(round(self.xmax - self.xmin), round(self.ymax - self.ymin)))
+        object.__setattr__(self, "size", Size(round(self.xmax - self.xmin), round(self.ymax - self.ymin)))
 
     @cached_property
     def center(self) -> tuple[float, float]:
@@ -59,63 +59,63 @@ class AnnotatedBox(Box):
 
 class Transition(enum.StrEnum):
     fade: str = "fade"
-    wipeleft : str = "wipeleft"
-    wiperight : str = "wiperight"
-    wipeup : str = "wipeup"
-    wipedown : str = "wipedown"
-    slideleft : str = "slideleft"
-    slideright : str = "slideright"
-    slideup : str = "slideup"
-    slidedown : str = "slidedown"
-    circlecrop : str = "circlecrop"
-    rectcrop : str = "rectcrop"
-    distance : str = "distance"
-    fadeblack : str = "fadeblack"
-    fadewhite : str = "fadewhite"
-    radial : str = "radial"
-    smoothleft : str = "smoothleft"
-    smoothright : str = "smoothright"
-    smoothup : str = "smoothup"
-    smoothdown : str = "smoothdown"
-    circleopen : str = "circleopen"
-    circleclose : str = "circleclose"
-    vertopen : str = "vertopen"
-    vertclose : str = "vertclose"
-    horzopen : str = "horzopen"
-    horzclose : str = "horzclose"
-    dissolve : str = "dissolve"
-    pixelize : str = "pixelize"
-    diagtl : str = "diagtl"
-    diagtr : str = "diagtr"
-    diagbl : str = "diagbl"
-    diagbr : str = "diagbr"
-    hlslice : str = "hlslice"
-    hrslice : str = "hrslice"
-    vuslice : str = "vuslice"
-    vdslice : str = "vdslice"
-    hblur : str = "hblur"
-    fadegrays : str = "fadegrays"
-    wipetl : str = "wipetl"
-    wipetr : str = "wipetr"
-    wipebl : str = "wipebl"
-    wipebr : str = "wipebr"
-    squeezeh : str = "squeezeh"
-    squeezev : str = "squeezev"
-    zoomin : str = "zoomin"
-    fadefast : str = "fadefast"
-    fadeslow : str = "fadeslow"
-    hlwind : str = "hlwind"
-    hrwind : str = "hrwind"
-    vuwind : str = "vuwind"
-    vdwind : str = "vdwind"
-    coverleft : str = "coverleft"
-    coverright : str = "coverright"
-    coverup : str = "coverup"
-    coverdown : str = "coverdown"
-    revealleft : str = "revealleft"
-    revealright : str = "revealright"
-    revealup : str = "revealup"
-    revealdown : str = "revealdown"
+    wipeleft: str = "wipeleft"
+    wiperight: str = "wiperight"
+    wipeup: str = "wipeup"
+    wipedown: str = "wipedown"
+    slideleft: str = "slideleft"
+    slideright: str = "slideright"
+    slideup: str = "slideup"
+    slidedown: str = "slidedown"
+    circlecrop: str = "circlecrop"
+    rectcrop: str = "rectcrop"
+    distance: str = "distance"
+    fadeblack: str = "fadeblack"
+    fadewhite: str = "fadewhite"
+    radial: str = "radial"
+    smoothleft: str = "smoothleft"
+    smoothright: str = "smoothright"
+    smoothup: str = "smoothup"
+    smoothdown: str = "smoothdown"
+    circleopen: str = "circleopen"
+    circleclose: str = "circleclose"
+    vertopen: str = "vertopen"
+    vertclose: str = "vertclose"
+    horzopen: str = "horzopen"
+    horzclose: str = "horzclose"
+    dissolve: str = "dissolve"
+    pixelize: str = "pixelize"
+    diagtl: str = "diagtl"
+    diagtr: str = "diagtr"
+    diagbl: str = "diagbl"
+    diagbr: str = "diagbr"
+    hlslice: str = "hlslice"
+    hrslice: str = "hrslice"
+    vuslice: str = "vuslice"
+    vdslice: str = "vdslice"
+    hblur: str = "hblur"
+    fadegrays: str = "fadegrays"
+    wipetl: str = "wipetl"
+    wipetr: str = "wipetr"
+    wipebl: str = "wipebl"
+    wipebr: str = "wipebr"
+    squeezeh: str = "squeezeh"
+    squeezev: str = "squeezev"
+    zoomin: str = "zoomin"
+    fadefast: str = "fadefast"
+    fadeslow: str = "fadeslow"
+    hlwind: str = "hlwind"
+    hrwind: str = "hrwind"
+    vuwind: str = "vuwind"
+    vdwind: str = "vdwind"
+    coverleft: str = "coverleft"
+    coverright: str = "coverright"
+    coverup: str = "coverup"
+    coverdown: str = "coverdown"
+    revealleft: str = "revealleft"
+    revealright: str = "revealright"
+    revealup: str = "revealup"
+    revealdown: str = "revealdown"
 
 
 @dataclass(frozen=True)
@@ -129,6 +129,7 @@ class KBImage:
 
     def __post_init__(self):
         if self.duration - self.transition_duration <= 0:
-            raise ValueError(f"Transition {self.transition} duration {self.duration} too short"
-                             " (transition duration {self.transition_duration})")
-        
+            raise ValueError(
+                f"Transition {self.transition} duration {self.duration} too short"
+                " (transition duration {self.transition_duration})"
+            )
