@@ -29,8 +29,10 @@ class Detector:
         if not features:
             return ImageBoxes(image.src, Size(*image.image.size), [])
 
-        # End each feature with a dot
-        text = " ".join(feature if feature.endswith(".") else f"{feature}." for feature in features)
+        # End each lowercase feature with a dot
+        text = " ".join(
+            feature.lower() if feature.endswith(".") else f"{feature.lower()}." for feature in features
+        )
 
         inputs = self.processor(images=image.image, text=text, return_tensors="pt").to(self.device)
         with torch.no_grad():
@@ -39,11 +41,10 @@ class Detector:
         results = self.processor.post_process_grounded_object_detection(
             outputs,
             inputs.input_ids,
-            box_threshold=0.4,
+            box_threshold=0.5,
             text_threshold=0.3,
             target_sizes=[image.image.size[::-1]],
         )
-        # XXX test if not features found, what is results?
         return ImageBoxes(
             image.src,
             Size(*image.image.size),
