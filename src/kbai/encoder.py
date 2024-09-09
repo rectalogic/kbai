@@ -1,9 +1,49 @@
 import itertools
 import pathlib
 import subprocess
+from dataclasses import dataclass, field
 
 from .detector import ImageBoxes
 from .structs import Size
+
+
+@dataclass
+class Filter:
+    name: str
+    options: dict[str, str] = field(default_factory=dict)
+
+    def __str__(self) -> str:
+        if self.options:
+            options = ":".join(f"{key}={value.replace(",", "\\,")}" for key, value in self.options.items())
+            return f"{self.name}={options}"
+        return self.name
+
+
+@dataclass
+class FilterChain:
+    filters: list[Filter]
+    input_pads: list[str] | None = None
+    output_pads: list[str] | None = None
+
+    def _pads(self, pads: list[str] | None) -> str:
+        if pads is None:
+            return ""
+        return "".join(f"[{p}]" for p in pads)
+
+    def __str__(self) -> str:
+        return (
+            self._pads(self.input_pads)
+            + ",".join(str(filter_) for filter_ in self.filters)
+            + self._pads(self.output_pads)
+        )
+
+
+@dataclass
+class FilterGraph:
+    filterchains: list[FilterChain] = field(default_factory=list)
+
+    def __str__(self) -> str:
+        return ";".join(str(filterchain) for filterchain in self.filterchains)
 
 
 def encode(
@@ -17,7 +57,7 @@ def encode(
     inputs = [("-i", image.src) for image in images]
     command.extend(itertools.chain.from_iterable(inputs))
 
-    filters: list[str] = []
+    filtergraph = FilterGraph()
     for i, image in enumerate(images):
         zoom_duration = image_duration * fps
         # Compute a zoompan size that is object-fit=cover of the output size
@@ -37,41 +77,46 @@ def encode(
                 10,  # Max allowed zoom is 10
             )
             # Don't start incrementing z until after the first frame
-            z_filter = f"z=if(gt(on\\,0)\\,zoom+{zoom / zoom_duration}\\,1)"
+            z_filter = Filter("zoompan", {"z": f"if(gt(on,0),zoom+{zoom / zoom_duration},1)"})
         else:
             translate_x = 0
             translate_y = 0
-            z_filter = "z=1"
+            z_filter = Filter("zoompan", {"z": "1"})
 
-        filterchain = ",".join(
-            f
-            for f in [
-                f"[{i}]zoompan={z_filter}"
-                f":x=(iw+iw*{translate_x})/2-(iw/zoom/2)"
-                f":y=(ih+ih*{translate_y})/2-(ih/zoom/2)"
-                f":s={zoom_image_size}:fps={fps}:d={zoom_duration}",
-                f"crop=w={encode_size.width}:h={encode_size.height}"
-                if zoom_image_size != encode_size
-                else None,
-                "setsar=1",
-            ]
-            if f is not None
+        z_filter.options.update(
+            {
+                "x": f"(iw+iw*{translate_x})/2-(iw/zoom/2)",
+                "y": f"(ih+ih*{translate_y})/2-(ih/zoom/2)",
+                "s": f"{zoom_image_size}:fps={fps}:d={zoom_duration}",
+            }
         )
+        filterchain = FilterChain([z_filter], input_pads=[str(i)])
+        if zoom_image_size != encode_size:
+            filterchain.filters.append(
+                Filter("crop", {"w": str(encode_size.width), "h": str(encode_size.height)})
+            )
+        filterchain.filters.append(Filter("setsar", {"sar": "1"}))
         if len(images) > 1:
-            filterchain = f"{filterchain}[pz{i}]"
-        filters.append(filterchain)
+            filterchain.output_pads = [f"pz{i}"]
+        filtergraph.filterchains.append(filterchain)
 
         if i > 0:
-            xfade = f"xfade=transition=fade:duration=1:offset={image_duration - 1}"
+            xfade = FilterChain(
+                [
+                    Filter(
+                        "xfade", {"transition": "fade", "duration": "1", "offset": str(image_duration - 1)}
+                    )
+                ]
+            )
             if i == 1:
-                xfade = f"[pz{i - 1}][pz{i}]{xfade}"
+                xfade.input_pads = [f"pz{i - 1}", f"pz{i}"]
             elif i >= 2:
-                xfade = f"[xf{i - 1}][pz{i}]{xfade}"
+                xfade.input_pads = [f"xf{i - 1}", f"pz{i}"]
             if i < len(images) - 1:
-                xfade = f"{xfade}[xf{i}]"
-            filters.append(xfade)
+                xfade.output_pads = [f"xf{i}"]
+            filtergraph.filterchains.append(xfade)
 
-    command.extend(["-filter_complex", ";".join(filters)])
+    command.extend(["-filter_complex", str(filtergraph)])
 
     command.extend(["-r", str(fps), "-s", str(encode_size), "-y", str(outfile)])
     subprocess.check_call(command)  # noqa: S603
