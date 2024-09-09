@@ -3,7 +3,7 @@ import pathlib
 import subprocess
 from dataclasses import dataclass, field
 
-from .detector import ImageBoxes
+from .detector import KBImage
 from .structs import Size
 
 
@@ -49,8 +49,7 @@ class FilterGraph:
 def encode(
     encode_size: Size,
     fps: int,
-    images: list[ImageBoxes],
-    image_duration: float,
+    images: list[KBImage],
     outfile: pathlib.Path | str,
 ) -> None:
     command = ["ffmpeg"]
@@ -58,8 +57,9 @@ def encode(
     command.extend(itertools.chain.from_iterable(inputs))
 
     filtergraph = FilterGraph()
+    prev_filterchain: FilterChain | None = None
     for i, image in enumerate(images):
-        zoom_duration = image_duration * fps
+        zoom_duration = image.duration * fps
         # Compute a zoompan size that is object-fit=cover of the output size
         # XXX also support object-fit=contain, with a pad filter
         image_fit_scale = max(encode_size.width / image.size.width, encode_size.height / image.size.height)
@@ -100,21 +100,28 @@ def encode(
             filterchain.output_pads = [f"pz{i}"]
         filtergraph.filterchains.append(filterchain)
 
-        if i > 0:
+        if prev_filterchain is not None:
             xfade = FilterChain(
                 [
                     Filter(
-                        "xfade", {"transition": "fade", "duration": "1", "offset": str(image_duration - 1)}
+                        "xfade",
+                        {
+                            "transition": image.transition,
+                            "duration": str(image.transition_duration),
+                            "offset": str(image.duration - image.transition_duration),
+                        },
                     )
-                ]
+                ],
+                input_pads=[
+                    prev_filterchain.output_pads[0],
+                    filterchain.output_pads[0],
+                ],
+                output_pads=[f"xf{i}"] if i < len(images) - 1 else None,
             )
-            if i == 1:
-                xfade.input_pads = [f"pz{i - 1}", f"pz{i}"]
-            elif i >= 2:
-                xfade.input_pads = [f"xf{i - 1}", f"pz{i}"]
-            if i < len(images) - 1:
-                xfade.output_pads = [f"xf{i}"]
             filtergraph.filterchains.append(xfade)
+            prev_filterchain = xfade
+        else:
+            prev_filterchain = filterchain
 
     command.extend(["-filter_complex", str(filtergraph)])
 

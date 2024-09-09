@@ -1,9 +1,9 @@
 from PIL import Image, ImageDraw
 
-from .structs import ImageBoxes
+from .structs import KBImage
 
 
-def debug_image(image: Image.Image, image_boxes: ImageBoxes) -> None:
+def debug_image(image: Image.Image, image_boxes: KBImage) -> None:
     """
     Draw outline boxes on the image
     """

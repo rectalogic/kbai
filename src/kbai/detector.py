@@ -6,7 +6,7 @@ import torch
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
 from .image import ImageSrc
-from .structs import AnnotatedBox, ImageBoxes, Size
+from .structs import AnnotatedBox, KBImage, Size
 
 
 class Detector:
@@ -25,9 +25,9 @@ class Detector:
         self.processor = AutoProcessor.from_pretrained(model_id)
         self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(self.device)
 
-    def detect(self, image: ImageSrc, features: ta.Sequence[str]) -> ImageBoxes:
+    def detect(self, image: ImageSrc, features: ta.Sequence[str]) -> KBImage:
         if not features:
-            return ImageBoxes(image.src, Size(*image.image.size), [])
+            return KBImage(image.src, Size(*image.image.size), [])
 
         # End each lowercase feature with a dot
         text = " ".join(
@@ -45,7 +45,7 @@ class Detector:
             text_threshold=0.3,
             target_sizes=[image.image.size[::-1]],
         )
-        return ImageBoxes(
+        return KBImage(
             image.src,
             Size(*image.image.size),
             [
