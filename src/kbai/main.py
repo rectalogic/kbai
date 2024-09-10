@@ -1,14 +1,15 @@
 # Copyright (C) 2024 Andrew Wason
 # SPDX-License-Identifier: AGPL-3.0-or-later
-from .cli import parse_args
+import argparse
+
+from .debug import debug_image
 from .detector import Detector
 from .encoder import encode
 from .image import load_image
 from .structs import KBImage, Size
 
 
-def main() -> None:
-    args = parse_args()
+def encode_main(args: argparse.Namespace) -> None:
     fps = args.framerate
     size = args.size
     output = args.output
@@ -34,3 +35,10 @@ def main() -> None:
         )
 
     encode(size, fps, kbimages, output)
+
+
+def detect_main(args: argparse.Namespace) -> None:
+    image = load_image(args.image)
+    detector = Detector()
+    boxes = detector.detect(image, args.feature)
+    debug_image(image.image, boxes)

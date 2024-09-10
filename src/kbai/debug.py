@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from PIL import Image, ImageDraw
 
-from .structs import KBImage
+from .structs import Box
 
 
-def debug_image(image: Image.Image, kbimages: KBImage) -> None:
+def debug_image(image: Image.Image, boxes: list[Box]) -> None:
     """
     Draw outline boxes on the image
     """
     draw = ImageDraw.Draw(image)
-    for box in kbimages.boxes:
+    for box in boxes:
         draw.rectangle((box.xmin, box.ymin, box.xmax, box.ymax), outline="red")
     image.show()

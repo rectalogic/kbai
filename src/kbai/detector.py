@@ -8,7 +8,7 @@ import torch
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
 
 from .image import ImageSrc
-from .structs import AnnotatedBox, KBImage, Size
+from .structs import AnnotatedBox
 
 
 class Detector:
@@ -25,9 +25,7 @@ class Detector:
         self.device = torch.device(device)
 
         self.processor = AutoProcessor.from_pretrained(model_id)
-        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(
-            self.device
-        )
+        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(self.device)
 
     def detect(self, image: ImageSrc, features: ta.Sequence[str]) -> list[AnnotatedBox]:
         if not features:
@@ -35,13 +33,10 @@ class Detector:
 
         # End each lowercase feature with a dot
         text = " ".join(
-            feature.lower() if feature.endswith(".") else f"{feature.lower()}."
-            for feature in features
+            feature.lower() if feature.endswith(".") else f"{feature.lower()}." for feature in features
         )
 
-        inputs = self.processor(images=image.image, text=text, return_tensors="pt").to(
-            self.device
-        )
+        inputs = self.processor(images=image.image, text=text, return_tensors="pt").to(self.device)
         with torch.no_grad():
             outputs = self.model(**inputs)
 
@@ -54,7 +49,5 @@ class Detector:
         )
         return [
             AnnotatedBox(*box.tolist(), label)
-            for box, label in zip(
-                results[0]["boxes"], results[0]["labels"], strict=True
-            )
+            for box, label in zip(results[0]["boxes"], results[0]["labels"], strict=True)
         ]

@@ -17,7 +17,7 @@ classifiers = [
 ]
 
 [project.scripts]
-kbai = "kbai.main:main"
+kbai = "kbai.cli:main"
 
 [project.optional-dependencies]
 debug = []

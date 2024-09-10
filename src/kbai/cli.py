@@ -3,15 +3,30 @@
 
 from argparse import SUPPRESS, Action, ArgumentParser, Namespace
 
+from .main import detect_main, encode_main
 from .structs import Size, Transition
 
 
 class ImageAction(Action):
     image_parser = ArgumentParser(add_help=False)
-    image_parser.add_argument("image")
-    image_parser.add_argument("-id", dest="image_duration", type=float, default=SUPPRESS)
-    image_parser.add_argument("-tn", dest="transition_name", type=Transition, default=SUPPRESS)
-    image_parser.add_argument("-td", dest="transition_duration", type=float, default=SUPPRESS)
+    image_parser.add_argument("image", help="Image url or path to detect features in.")
+    image_parser.add_argument(
+        "-id", dest="image_duration", type=float, default=SUPPRESS, help="Image duration in seconds."
+    )
+    image_parser.add_argument(
+        "-tn",
+        dest="transition_name",
+        type=Transition,
+        default=SUPPRESS,
+        help="Transition name for transitioning to next image.",
+    )
+    image_parser.add_argument(
+        "-td",
+        dest="transition_duration",
+        type=float,
+        default=SUPPRESS,
+        help="Duration of transition in seconds.",
+    )
     image_parser.add_argument(
         "-ft", dest="feature_text", action="append", default=SUPPRESS
     )  # XXX how can user specify None?
@@ -42,8 +57,9 @@ def parse_size(value: str) -> Size:
     return Size(int(w), int(h))
 
 
-def parse_args() -> Namespace:
-    parser = ArgumentParser(description="Process images with options")
+def build_encode_parser(subparsers: Action) -> None:
+    parser = subparsers.add_parser("encode", description="Encode images with pan/zoom into a video.")
+
     parser.add_argument("-o", "--output", help="Output video filename (with extension).")
     parser.add_argument("-r", "--framerate", type=int, default=25, help="Output video framerate (FPS).")
     parser.add_argument(
@@ -62,7 +78,7 @@ def parse_args() -> Namespace:
         type=Transition,
         choices=[str(t) for t in Transition],
         default=Transition.fade,
-        help="Default image transition name",
+        help="Default image transition name.",
     )
     parser.add_argument(
         "-dtd",
@@ -75,7 +91,7 @@ def parse_args() -> Namespace:
         "-dft",
         "--default-feature-text",
         action="append",
-        default=["a human face", "a dog", "a cat"],
+        default=["a human face", "a person", "a dog", "a cat"],
         help="Default image feature detection text.",
     )
     parser.add_argument(
@@ -86,13 +102,22 @@ def parse_args() -> Namespace:
         # XXX figure out help
         help=ImageAction.image_parser.format_help(),
     )
-    return parser.parse_args()
+    parser.set_defaults(func=encode_main)
 
 
-# XXX
-if __name__ == "__main__":
-    args = parse_args()
-    for image in args.image:
-        print(f"Processing {image['image']}:")
-        for option, value in image.items():
-            print(f"  {option}: {value}")
+def build_detect_parser(subparsers: Action) -> None:
+    parser = subparsers.add_parser(
+        "detect", description="Detect features in image and display bounding boxes (useful for debugging)."
+    )
+    parser.add_argument("image", help="Image url or path to detect features in.")
+    parser.add_argument("feature", action="append", help="Feature description.")
+    parser.set_defaults(func=detect_main)
+
+
+def main() -> None:
+    parser = ArgumentParser(description="'Ken Burns' AI - automatic image pan and zoom.")
+    subparsers = parser.add_subparsers(title="commands", required=True)
+    build_encode_parser(subparsers)
+    build_detect_parser(subparsers)
+    args = parser.parse_args()
+    args.func(args)

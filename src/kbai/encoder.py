@@ -5,8 +5,7 @@ import pathlib
 import subprocess
 from dataclasses import dataclass, field
 
-from .detector import KBImage
-from .structs import Size
+from .structs import KBImage, Size
 
 
 @dataclass
@@ -16,10 +15,7 @@ class Filter:
 
     def __str__(self) -> str:
         if self.options:
-            options = ":".join(
-                f"{key}={value.replace(",", "\\,")}"
-                for key, value in self.options.items()
-            )
+            options = ":".join(f"{key}={value.replace(",", "\\,")}" for key, value in self.options.items())
             return f"{self.name}={options}"
         return self.name
 
@@ -67,9 +63,7 @@ def encode(
         zoom_duration = image.duration * fps
         # Compute a zoompan size that is object-fit=cover of the output size
         # XXX also support object-fit=contain, with a pad filter
-        image_fit_scale = max(
-            encode_size.width / image.size.width, encode_size.height / image.size.height
-        )
+        image_fit_scale = max(encode_size.width / image.size.width, encode_size.height / image.size.height)
         zoom_image_size = image.size * image_fit_scale
         if image.boxes:
             # Just use first box for now
@@ -100,9 +94,7 @@ def encode(
         filterchain = FilterChain([z_filter], input_pads=[str(i)])
         if zoom_image_size != encode_size:
             filterchain.filters.append(
-                Filter(
-                    "crop", {"w": str(encode_size.width), "h": str(encode_size.height)}
-                )
+                Filter("crop", {"w": str(encode_size.width), "h": str(encode_size.height)})
             )
         filterchain.filters.append(Filter("setsar", {"sar": "1"}))
         if len(kbimages) > 1:
@@ -136,16 +128,4 @@ def encode(
 
     command.extend(["-r", str(fps), "-s", str(encode_size), "-y", str(outfile)])
     subprocess.check_call(command)  # noqa: S603
-    print(command)
-
-
-# XXX debugging
-if __name__ == "__main__":
-    images = [
-        ImageBoxes(
-            "/Users/aw/Projects/rectalogic/mediafx-qt/tests/fixtures/assets/bridge.jpg", Size(1024, 768), []
-        ),
-        # ImageBoxes("/Users/aw/Desktop/cat.jpg", Size(640, 480), []),
-        # ImageBoxes("/Users/aw/Pictures/blackflag.jpg", Size(336, 400), []),
-    ]
-    encode(Size(640, 360), 30, images, 3, "/tmp/pz2.mp4")
+    print(command)  # XXX
