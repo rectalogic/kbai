@@ -1,12 +1,15 @@
 # Copyright (C) 2024 Andrew Wason
 # SPDX-License-Identifier: AGPL-3.0-or-later
+from __future__ import annotations
+
 import os
 import typing as ta
 from argparse import SUPPRESS, Action, ArgumentParser, Namespace
 from collections.abc import Sequence
 
 from .main import detect_main, encode_main
-from .structs import Size, Transition
+from .structs import Size
+from .transitions import Transition
 
 if ta.TYPE_CHECKING:
     # https://github.com/python/cpython/issues/85758
@@ -84,8 +87,8 @@ def build_encode_parser(subparsers: _SubParsersAction) -> None:
         "-dtn",
         "--default-transition-name",
         type=Transition,
-        choices=[str(t) for t in Transition],
-        default=Transition.fade,
+        choices=[t.value for t in Transition],
+        default=Transition.FADE,
         help="Default image transition name.",
     )
     parser.add_argument(

@@ -110,7 +110,7 @@ def encode(
                     Filter(
                         "xfade",
                         {
-                            "transition": prev_image.transition,
+                            "transition": prev_image.transition.value,
                             "duration": str(prev_image.transition_duration),
                             "offset": str(xfade_offset),
                         },

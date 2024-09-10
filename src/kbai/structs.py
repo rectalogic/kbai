@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
-import enum
 import typing as ta
 from dataclasses import dataclass, field
 from fractions import Fraction
 from functools import cached_property
+
+from .transitions import Transition
 
 
 @dataclass(frozen=True)
@@ -63,67 +64,6 @@ class AnnotatedBox(Box):
     annotation: str
 
 
-class Transition(enum.StrEnum):
-    fade: str = "fade"
-    wipeleft: str = "wipeleft"
-    wiperight: str = "wiperight"
-    wipeup: str = "wipeup"
-    wipedown: str = "wipedown"
-    slideleft: str = "slideleft"
-    slideright: str = "slideright"
-    slideup: str = "slideup"
-    slidedown: str = "slidedown"
-    circlecrop: str = "circlecrop"
-    rectcrop: str = "rectcrop"
-    distance: str = "distance"
-    fadeblack: str = "fadeblack"
-    fadewhite: str = "fadewhite"
-    radial: str = "radial"
-    smoothleft: str = "smoothleft"
-    smoothright: str = "smoothright"
-    smoothup: str = "smoothup"
-    smoothdown: str = "smoothdown"
-    circleopen: str = "circleopen"
-    circleclose: str = "circleclose"
-    vertopen: str = "vertopen"
-    vertclose: str = "vertclose"
-    horzopen: str = "horzopen"
-    horzclose: str = "horzclose"
-    dissolve: str = "dissolve"
-    pixelize: str = "pixelize"
-    diagtl: str = "diagtl"
-    diagtr: str = "diagtr"
-    diagbl: str = "diagbl"
-    diagbr: str = "diagbr"
-    hlslice: str = "hlslice"
-    hrslice: str = "hrslice"
-    vuslice: str = "vuslice"
-    vdslice: str = "vdslice"
-    hblur: str = "hblur"
-    fadegrays: str = "fadegrays"
-    wipetl: str = "wipetl"
-    wipetr: str = "wipetr"
-    wipebl: str = "wipebl"
-    wipebr: str = "wipebr"
-    squeezeh: str = "squeezeh"
-    squeezev: str = "squeezev"
-    zoomin: str = "zoomin"
-    fadefast: str = "fadefast"
-    fadeslow: str = "fadeslow"
-    hlwind: str = "hlwind"
-    hrwind: str = "hrwind"
-    vuwind: str = "vuwind"
-    vdwind: str = "vdwind"
-    coverleft: str = "coverleft"
-    coverright: str = "coverright"
-    coverup: str = "coverup"
-    coverdown: str = "coverdown"
-    revealleft: str = "revealleft"
-    revealright: str = "revealright"
-    revealup: str = "revealup"
-    revealdown: str = "revealdown"
-
-
 @dataclass
 class KBImage:
     src: str
@@ -137,6 +77,6 @@ class KBImage:
     def __post_init__(self) -> None:
         if self.duration - self.transition_duration <= 0:
             raise ValueError(
-                f"Transition {self.transition} duration {self.duration} too short"
+                f"Transition {self.transition.value} duration {self.duration} too short"
                 " (transition duration {self.transition_duration})"
             )
