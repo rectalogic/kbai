@@ -1,10 +1,16 @@
 # Copyright (C) 2024 Andrew Wason
 # SPDX-License-Identifier: AGPL-3.0-or-later
-
+import os
+import typing as ta
 from argparse import SUPPRESS, Action, ArgumentParser, Namespace
+from collections.abc import Sequence
 
 from .main import detect_main, encode_main
 from .structs import Size, Transition
+
+if ta.TYPE_CHECKING:
+    # https://github.com/python/cpython/issues/85758
+    from argparse import _SubParsersAction
 
 
 class ImageAction(Action):
@@ -31,7 +37,7 @@ class ImageAction(Action):
         "-ft", dest="feature_text", action="append", default=SUPPRESS
     )  # XXX how can user specify None?
 
-    def __init__(self, option_strings, dest=None, nargs=None, **kwargs):
+    def __init__(self, option_strings, dest: str, nargs: int | str | None = None, **kwargs) -> None:
         if nargs is not None:
             raise ValueError("nargs not allowed")
         super().__init__(option_strings, dest=dest, nargs="+", **kwargs)  # XXX "+" eats the output filename
@@ -40,9 +46,11 @@ class ImageAction(Action):
         self,
         parser: ArgumentParser,
         namespace: Namespace,
-        values,
+        values: str | Sequence[ta.Any] | None,
         option_string: str | None = None,
     ) -> None:
+        if not isinstance(values, Sequence):
+            raise ValueError("values not a list")
         images = getattr(namespace, self.dest) or []
         image = vars(self.image_parser.parse_args([values[0]] + [a.replace("/", "-") for a in values[1:]]))
         images.append(image)
@@ -57,7 +65,7 @@ def parse_size(value: str) -> Size:
     return Size(int(w), int(h))
 
 
-def build_encode_parser(subparsers: Action) -> None:
+def build_encode_parser(subparsers: _SubParsersAction) -> None:
     parser = subparsers.add_parser("encode", description="Encode images with pan/zoom into a video.")
 
     parser.add_argument("-o", "--output", help="Output video filename (with extension).")
@@ -105,7 +113,7 @@ def build_encode_parser(subparsers: Action) -> None:
     parser.set_defaults(func=encode_main)
 
 
-def build_detect_parser(subparsers: Action) -> None:
+def build_detect_parser(subparsers: _SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "detect", description="Detect features in image and display bounding boxes (useful for debugging)."
     )
@@ -115,6 +123,9 @@ def build_detect_parser(subparsers: Action) -> None:
 
 
 def main() -> None:
+    # We fork/exec - disable "huggingface/tokenizers: The current process just got forked ..." warning
+    os.environ["TOKENIZERS_PARALLELISM"] = "true"
+
     parser = ArgumentParser(description="'Ken Burns' AI - automatic image pan and zoom.")
     subparsers = parser.add_subparsers(title="commands", required=True)
     build_encode_parser(subparsers)

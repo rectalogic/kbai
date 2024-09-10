@@ -59,6 +59,8 @@ def encode(
 
     filtergraph = FilterGraph()
     prev_filterchain: FilterChain | None = None
+    prev_image: KBImage | None = None
+    xfade_offset: float = 0
     for i, image in enumerate(kbimages):
         zoom_duration = image.duration * fps
         # Compute a zoompan size that is object-fit=cover of the output size
@@ -101,15 +103,16 @@ def encode(
             filterchain.output_pads = [f"pz{i}"]
         filtergraph.filterchains.append(filterchain)
 
-        if prev_filterchain is not None:
+        if prev_filterchain is not None and prev_image is not None:
+            xfade_offset += prev_image.duration - prev_image.transition_duration
             xfade = FilterChain(
                 [
                     Filter(
                         "xfade",
                         {
-                            "transition": image.transition,
-                            "duration": str(image.transition_duration),
-                            "offset": str(image.duration - image.transition_duration),
+                            "transition": prev_image.transition,
+                            "duration": str(prev_image.transition_duration),
+                            "offset": str(xfade_offset),
                         },
                     )
                 ],
@@ -123,6 +126,8 @@ def encode(
             prev_filterchain = xfade
         else:
             prev_filterchain = filterchain
+
+        prev_image = image
 
     command.extend(["-filter_complex", str(filtergraph)])
 

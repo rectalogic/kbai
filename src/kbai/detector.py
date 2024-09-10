@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
-import typing as ta
+from collections.abc import Sequence
 
 import torch
 from transformers import AutoModelForZeroShotObjectDetection, AutoProcessor
@@ -27,7 +27,7 @@ class Detector:
         self.processor = AutoProcessor.from_pretrained(model_id)
         self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(self.device)
 
-    def detect(self, image: ImageSrc, features: ta.Sequence[str]) -> list[AnnotatedBox]:
+    def detect(self, image: ImageSrc, features: Sequence[str]) -> list[AnnotatedBox]:
         if not features:
             return []
 

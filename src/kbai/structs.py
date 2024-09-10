@@ -134,7 +134,7 @@ class KBImage:
     transition: Transition
     feature_text: list[str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.duration - self.transition_duration <= 0:
             raise ValueError(
                 f"Transition {self.transition} duration {self.duration} too short"

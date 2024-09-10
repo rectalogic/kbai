@@ -14,6 +14,7 @@ class ImageSrc:
 
 
 def load_image(src: str) -> ImageSrc:
+    image: Image.Image
     url = httpx.URL(src)
     if url.is_absolute_url:
         response = httpx.get(url, follow_redirects=True)
