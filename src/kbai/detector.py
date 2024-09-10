@@ -1,3 +1,5 @@
+# Copyright (C) 2024 Andrew Wason
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
 import typing as ta
@@ -23,18 +25,23 @@ class Detector:
         self.device = torch.device(device)
 
         self.processor = AutoProcessor.from_pretrained(model_id)
-        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(self.device)
+        self.model = AutoModelForZeroShotObjectDetection.from_pretrained(model_id).to(
+            self.device
+        )
 
-    def detect(self, image: ImageSrc, features: ta.Sequence[str]) -> KBImage:
+    def detect(self, image: ImageSrc, features: ta.Sequence[str]) -> list[AnnotatedBox]:
         if not features:
-            return KBImage(image.src, Size(*image.image.size), [])
+            return []
 
         # End each lowercase feature with a dot
         text = " ".join(
-            feature.lower() if feature.endswith(".") else f"{feature.lower()}." for feature in features
+            feature.lower() if feature.endswith(".") else f"{feature.lower()}."
+            for feature in features
         )
 
-        inputs = self.processor(images=image.image, text=text, return_tensors="pt").to(self.device)
+        inputs = self.processor(images=image.image, text=text, return_tensors="pt").to(
+            self.device
+        )
         with torch.no_grad():
             outputs = self.model(**inputs)
 
@@ -45,11 +52,9 @@ class Detector:
             text_threshold=0.3,
             target_sizes=[image.image.size[::-1]],
         )
-        return KBImage(
-            image.src,
-            Size(*image.image.size),
-            [
-                AnnotatedBox(*box.tolist(), label)
-                for box, label in zip(results[0]["boxes"], results[0]["labels"], strict=True)
-            ],
-        )
+        return [
+            AnnotatedBox(*box.tolist(), label)
+            for box, label in zip(
+                results[0]["boxes"], results[0]["labels"], strict=True
+            )
+        ]

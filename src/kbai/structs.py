@@ -1,3 +1,5 @@
+# Copyright (C) 2024 Andrew Wason
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
 import enum
@@ -37,7 +39,11 @@ class Box:
         if self.xmin >= self.xmax or self.ymin >= self.ymax:
             raise ValueError("Invalid Box")
         # We are frozen so can't assign to self.size
-        object.__setattr__(self, "size", Size(round(self.xmax - self.xmin), round(self.ymax - self.ymin)))
+        object.__setattr__(
+            self,
+            "size",
+            Size(round(self.xmax - self.xmin), round(self.ymax - self.ymin)),
+        )
 
     @cached_property
     def center(self) -> tuple[float, float]:
@@ -118,14 +124,15 @@ class Transition(enum.StrEnum):
     revealdown: str = "revealdown"
 
 
-@dataclass(frozen=True)
+@dataclass
 class KBImage:
     src: str
     size: Size
     boxes: list[AnnotatedBox]
-    duration: float = 5
-    transition: Transition = Transition.fade
-    transition_duration: float = 1
+    duration: float
+    transition_duration: float
+    transition: Transition
+    feature_text: list[str] | None = None
 
     def __post_init__(self):
         if self.duration - self.transition_duration <= 0:

@@ -1,3 +1,5 @@
+# Copyright (C) 2024 Andrew Wason
+# SPDX-License-Identifier: AGPL-3.0-or-later
 import itertools
 import pathlib
 import subprocess
@@ -14,7 +16,10 @@ class Filter:
 
     def __str__(self) -> str:
         if self.options:
-            options = ":".join(f"{key}={value.replace(",", "\\,")}" for key, value in self.options.items())
+            options = ":".join(
+                f"{key}={value.replace(",", "\\,")}"
+                for key, value in self.options.items()
+            )
             return f"{self.name}={options}"
         return self.name
 
@@ -49,20 +54,22 @@ class FilterGraph:
 def encode(
     encode_size: Size,
     fps: int,
-    images: list[KBImage],
+    kbimages: list[KBImage],
     outfile: pathlib.Path | str,
 ) -> None:
     command = ["ffmpeg"]
-    inputs = [("-i", image.src) for image in images]
+    inputs = [("-i", image.src) for image in kbimages]
     command.extend(itertools.chain.from_iterable(inputs))
 
     filtergraph = FilterGraph()
     prev_filterchain: FilterChain | None = None
-    for i, image in enumerate(images):
+    for i, image in enumerate(kbimages):
         zoom_duration = image.duration * fps
         # Compute a zoompan size that is object-fit=cover of the output size
         # XXX also support object-fit=contain, with a pad filter
-        image_fit_scale = max(encode_size.width / image.size.width, encode_size.height / image.size.height)
+        image_fit_scale = max(
+            encode_size.width / image.size.width, encode_size.height / image.size.height
+        )
         zoom_image_size = image.size * image_fit_scale
         if image.boxes:
             # Just use first box for now
@@ -93,10 +100,12 @@ def encode(
         filterchain = FilterChain([z_filter], input_pads=[str(i)])
         if zoom_image_size != encode_size:
             filterchain.filters.append(
-                Filter("crop", {"w": str(encode_size.width), "h": str(encode_size.height)})
+                Filter(
+                    "crop", {"w": str(encode_size.width), "h": str(encode_size.height)}
+                )
             )
         filterchain.filters.append(Filter("setsar", {"sar": "1"}))
-        if len(images) > 1:
+        if len(kbimages) > 1:
             filterchain.output_pads = [f"pz{i}"]
         filtergraph.filterchains.append(filterchain)
 
@@ -116,7 +125,7 @@ def encode(
                     prev_filterchain.output_pads[0],
                     filterchain.output_pads[0],
                 ],
-                output_pads=[f"xf{i}"] if i < len(images) - 1 else None,
+                output_pads=[f"xf{i}"] if i < len(kbimages) - 1 else None,
             )
             filtergraph.filterchains.append(xfade)
             prev_filterchain = xfade
