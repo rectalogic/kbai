@@ -23,7 +23,8 @@ def encode_main(args: argparse.Namespace) -> None:
             KBImage(
                 image.src,
                 Size(*image.image.size),
-                boxes,
+                fit=imageinfo.get("image_fit", args.default_image_fit),
+                boxes=boxes,
                 duration=imageinfo.get("image_duration", args.default_image_duration),
                 transition_duration=imageinfo.get("transition_duration", args.default_transition_duration),
                 transition=imageinfo.get("transition", args.default_transition),

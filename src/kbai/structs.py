@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
+import enum
 import typing as ta
 from dataclasses import dataclass, field
 from fractions import Fraction
@@ -9,6 +10,11 @@ from functools import cached_property
 
 from .easings import Easing
 from .transitions import Transition
+
+
+class Fit(enum.Enum):
+    COVER = "cover"
+    CONTAIN = "contain"
 
 
 @dataclass(frozen=True)
@@ -69,6 +75,7 @@ class AnnotatedBox(Box):
 class KBImage:
     src: str
     size: Size
+    fit: Fit
     boxes: list[AnnotatedBox]
     duration: float
     transition_duration: float

@@ -11,7 +11,7 @@ from collections.abc import Sequence
 
 from .easings import Easing
 from .main import detect_main, encode_main
-from .structs import Size
+from .structs import Fit, Size
 from .transitions import Transition
 
 if ta.TYPE_CHECKING:
@@ -32,6 +32,9 @@ class ImageAction(Action):
     image_parser.add_argument("image", help="Image url or path to detect features in.")
     image_parser.add_argument(
         "-id", dest="image_duration", type=float, default=SUPPRESS, help="Image duration in seconds."
+    )
+    image_parser.add_argument(
+        "-if", dest="image_fit", type=enum_converter(Fit), default=SUPPRESS, help="Image fit."
     )
     image_parser.add_argument(
         "-tn",
@@ -98,6 +101,14 @@ def build_encode_parser(subparsers: _SubParsersAction) -> None:
         type=parse_size,
         default="640x360",
         help="Output video size (WxH).",
+    )
+    parser.add_argument(
+        "-dif",
+        "--default-image-fit",
+        type=enum_converter(Fit),
+        choices=[t.value for t in Fit],
+        default="cover",
+        help="Default image fit (contain=scale to fit inside encoded size, cover=scale to fill entire encoded size).",
     )
     parser.add_argument(
         "-did", "--default-image-duration", type=float, default=5, help="Default image duration."

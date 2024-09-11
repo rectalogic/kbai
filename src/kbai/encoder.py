@@ -6,7 +6,7 @@ import re
 import subprocess
 from dataclasses import dataclass, field
 
-from .structs import KBImage, Size
+from .structs import Fit, KBImage, Size
 
 
 @dataclass
@@ -80,11 +80,43 @@ def encode(
     xfade_offset: float = 0
     for i, image in enumerate(kbimages):
         zoom_duration = image.duration * fps
-        # Compute a zoompan size that is object-fit=cover of the output size
-        # XXX also support object-fit=contain, with a pad filter
-        image_fit_scale = max(encode_size.width / image.size.width, encode_size.height / image.size.height)
+        # Compute a zoompan size that is fit to the output size
+        match image.fit:
+            case Fit.COVER:
+                image_fit_scale = max(
+                    encode_size.width / image.size.width, encode_size.height / image.size.height
+                )
+            case Fit.CONTAIN:
+                image_fit_scale = min(
+                    encode_size.width / image.size.width, encode_size.height / image.size.height
+                )
         zoom_image_size = image.size * image_fit_scale
         if image.boxes:
+            filterchain = FilterChain([], input_pads=[str(i)])
+
+            if zoom_image_size != encode_size and image.fit is Fit.CONTAIN:
+                # XXX need to adjust box too - we pad left/top so coords are off
+                filterchain.filters.extend(
+                    [
+                        Filter(
+                            "scale",
+                            {
+                                "w": str(zoom_image_size.width),
+                                "h": str(zoom_image_size.height),
+                            },
+                        ),
+                        Filter(
+                            "pad",
+                            {
+                                "w": str(encode_size.width),
+                                "h": str(encode_size.height),
+                                "x": "-1",
+                                "y": "-1",
+                            },
+                        ),
+                    ]
+                )
+
             # Just use first box for now
             # XXX look for highest threshold that matches requested feature?
             scaled_box = image.boxes[0].scaled(image_fit_scale)
@@ -117,8 +149,8 @@ def encode(
                 "s": f"{zoom_image_size}:fps={fps}:d={zoom_duration}",
             }
         )
-        filterchain = FilterChain([z_filter], input_pads=[str(i)])
-        if zoom_image_size != encode_size:
+        filterchain.filters.append(z_filter)
+        if zoom_image_size != encode_size and image.fit is Fit.COVER:
             filterchain.filters.append(
                 Filter("crop", {"w": str(encode_size.width), "h": str(encode_size.height)})
             )
