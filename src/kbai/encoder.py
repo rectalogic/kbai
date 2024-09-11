@@ -99,7 +99,14 @@ def encode(
                 10,  # Max allowed ffmpeg zoom is 10
             )
             # Don't start incrementing z until after the first frame
-            z_filter = Filter("zoompan", {"z": f"if(gt(on,0),zoom+{zoom / zoom_duration},1)"})
+            z_filter = Filter(
+                "zoompan",
+                {
+                    "z": f"st(0, clip(time / {image.duration}, 0, 1));"
+                    f"{image.transition_easing.value};"
+                    f"lerp(1, {zoom}, ld(0))"
+                },
+            )
         else:
             translate_x = 0
             translate_y = 0
