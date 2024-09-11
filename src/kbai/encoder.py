@@ -52,8 +52,20 @@ def encode(
     fps: int,
     kbimages: list[KBImage],
     outfile: pathlib.Path | str,
+    verbose: int = 0,
 ) -> None:
-    command = ["ffmpeg"]
+    command = [
+        "ffmpeg",
+        "-loglevel",
+        {
+            0: "error",
+            1: "warning",
+            2: "info",
+            3: "verbose",
+            4: "debug",
+            5: "trace",
+        }.get(verbose, "trace"),
+    ]
     inputs = [("-i", image.src) for image in kbimages]
     command.extend(itertools.chain.from_iterable(inputs))
 
@@ -65,10 +77,12 @@ def encode(
         zoom_duration = image.duration * fps
         # Compute a zoompan size that is object-fit=cover of the output size
         # XXX also support object-fit=contain, with a pad filter
+        # XXX need to account for final crop when computing cover fit
         image_fit_scale = max(encode_size.width / image.size.width, encode_size.height / image.size.height)
         zoom_image_size = image.size * image_fit_scale
         if image.boxes:
             # Just use first box for now
+            # XXX look for highest threshold that matches requested feature?
             scaled_box = image.boxes[0].scaled(image_fit_scale)
             # Normalized translation, -1..0..1
             translate_x = (2 * scaled_box.center[0] / zoom_image_size.width) - 1
@@ -77,7 +91,7 @@ def encode(
             zoom = min(
                 zoom_image_size.width / scaled_box.size.width,
                 zoom_image_size.height / scaled_box.size.height,
-                10,  # Max allowed zoom is 10
+                10,  # Max allowed ffmpeg zoom is 10
             )
             # Don't start incrementing z until after the first frame
             z_filter = Filter("zoompan", {"z": f"if(gt(on,0),zoom+{zoom / zoom_duration},1)"})
@@ -133,4 +147,5 @@ def encode(
 
     command.extend(["-r", str(fps), "-s", str(encode_size), "-y", str(outfile)])
     subprocess.check_call(command)  # noqa: S603
-    print(command)  # XXX
+    if verbose > 0:
+        print(command)

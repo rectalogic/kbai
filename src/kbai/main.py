@@ -26,12 +26,13 @@ def encode_main(args: argparse.Namespace) -> None:
                 boxes,
                 duration=imageinfo.get("image_duration", args.default_image_duration),
                 transition_duration=imageinfo.get("transition_duration", args.default_transition_duration),
-                transition=imageinfo.get("transition_name", args.default_transition_name),
+                transition=imageinfo.get("transition", args.default_transition),
+                transition_easing=imageinfo.get("transition_easing", args.default_transition_easing),
                 feature_text=feature_text,
             )
         )
 
-    encode(size, fps, kbimages, output)
+    encode(size, fps, kbimages, output, args.verbose)
 
 
 def detect_main(args: argparse.Namespace) -> None:

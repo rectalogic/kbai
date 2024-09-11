@@ -2,11 +2,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from __future__ import annotations
 
+import enum
+import logging
 import os
 import typing as ta
 from argparse import SUPPRESS, Action, ArgumentParser, Namespace
 from collections.abc import Sequence
 
+from .easings import Easing
 from .main import detect_main, encode_main
 from .structs import Size
 from .transitions import Transition
@@ -14,6 +17,14 @@ from .transitions import Transition
 if ta.TYPE_CHECKING:
     # https://github.com/python/cpython/issues/85758
     from argparse import _SubParsersAction
+
+
+def enum_converter[ET: enum.Enum](ec: type[ET]) -> ta.Callable[[str], ET]:
+    def converter(value: str) -> ET:
+        name = value.upper().replace("-", "_")
+        return getattr(ec, name)
+
+    return converter
 
 
 class ImageAction(Action):
@@ -24,10 +35,17 @@ class ImageAction(Action):
     )
     image_parser.add_argument(
         "-tn",
-        dest="transition_name",
-        type=Transition,
+        dest="transition",
+        type=enum_converter(Transition),
         default=SUPPRESS,
         help="Transition name for transitioning to next image.",
+    )
+    image_parser.add_argument(
+        "-te",
+        dest="transition_easing",
+        type=enum_converter(Easing),
+        default=SUPPRESS,
+        help="Transition easing name for transitioning to next image.",
     )
     image_parser.add_argument(
         "-td",
@@ -43,7 +61,7 @@ class ImageAction(Action):
     def __init__(self, option_strings, dest: str, nargs: int | str | None = None, **kwargs) -> None:
         if nargs is not None:
             raise ValueError("nargs not allowed")
-        super().__init__(option_strings, dest=dest, nargs="+", **kwargs)  # XXX "+" eats the output filename
+        super().__init__(option_strings, dest=dest, nargs="+", **kwargs)
 
     def __call__(
         self,
@@ -71,6 +89,7 @@ def parse_size(value: str) -> Size:
 def build_encode_parser(subparsers: _SubParsersAction) -> None:
     parser = subparsers.add_parser("encode", description="Encode images with pan/zoom into a video.")
 
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbose logging.")
     parser.add_argument("-o", "--output", help="Output video filename (with extension).")
     parser.add_argument("-r", "--framerate", type=int, default=25, help="Output video framerate (FPS).")
     parser.add_argument(
@@ -86,10 +105,19 @@ def build_encode_parser(subparsers: _SubParsersAction) -> None:
     parser.add_argument(
         "-dtn",
         "--default-transition-name",
-        type=Transition,
+        dest="default_transition",
+        type=enum_converter(Transition),
         choices=[t.value for t in Transition],
-        default=Transition.FADE,
+        default="fade",
         help="Default image transition name.",
+    )
+    parser.add_argument(
+        "-dte",
+        "--default-transition-easing",
+        type=enum_converter(Easing),
+        choices=[t.value for t in Easing],
+        default="cubic-in-out",
+        help="Default image easing name.",
     )
     parser.add_argument(
         "-dtd",
@@ -134,4 +162,5 @@ def main() -> None:
     build_encode_parser(subparsers)
     build_detect_parser(subparsers)
     args = parser.parse_args()
+    logging.basicConfig(level=max(logging.DEBUG, logging.ERROR - 10 * args.verbose))
     args.func(args)

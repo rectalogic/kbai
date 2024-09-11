@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from functools import cached_property
 
+from .easings import Easing
 from .transitions import Transition
 
 
@@ -72,6 +73,7 @@ class KBImage:
     duration: float
     transition_duration: float
     transition: Transition
+    transition_easing: Easing
     feature_text: list[str] | None = None
 
     def __post_init__(self) -> None:
