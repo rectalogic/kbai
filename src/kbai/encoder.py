@@ -15,7 +15,7 @@ class Filter:
 
     def __str__(self) -> str:
         if self.options:
-            options = ":".join(f"{key}={value.replace(",", "\\,")}" for key, value in self.options.items())
+            options = ":".join(f"{key}={value}" for key, value in self.options.items())
             return f"{self.name}={options}"
         return self.name
 
@@ -94,7 +94,7 @@ def encode(
                 10,  # Max allowed ffmpeg zoom is 10
             )
             # Don't start incrementing z until after the first frame
-            z_filter = Filter("zoompan", {"z": f"if(gt(on,0),zoom+{zoom / zoom_duration},1)"})
+            z_filter = Filter("zoompan", {"z": f"'if(gt(on,0),zoom+{zoom / zoom_duration},1)'"})
         else:
             translate_x = 0
             translate_y = 0
