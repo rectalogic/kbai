@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import itertools
 import pathlib
+import re
 import subprocess
 from dataclasses import dataclass, field
 
@@ -12,10 +13,14 @@ from .structs import KBImage, Size
 class Filter:
     name: str
     options: dict[str, str] = field(default_factory=dict)
+    needs_quoting = re.compile("[,;]")
 
     def __str__(self) -> str:
         if self.options:
-            options = ":".join(f"{key}={value}" for key, value in self.options.items())
+            options = ":".join(
+                f"{key}='{value}'" if self.needs_quoting.search(value) else f"{key}={value}"
+                for key, value in self.options.items()
+            )
             return f"{self.name}={options}"
         return self.name
 
@@ -94,7 +99,7 @@ def encode(
                 10,  # Max allowed ffmpeg zoom is 10
             )
             # Don't start incrementing z until after the first frame
-            z_filter = Filter("zoompan", {"z": f"'if(gt(on,0),zoom+{zoom / zoom_duration},1)'"})
+            z_filter = Filter("zoompan", {"z": f"if(gt(on,0),zoom+{zoom / zoom_duration},1)"})
         else:
             translate_x = 0
             translate_y = 0
