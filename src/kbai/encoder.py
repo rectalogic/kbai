@@ -82,7 +82,6 @@ def encode(
         zoom_duration = image.duration * fps
         # Compute a zoompan size that is object-fit=cover of the output size
         # XXX also support object-fit=contain, with a pad filter
-        # XXX need to account for final crop when computing cover fit
         image_fit_scale = max(encode_size.width / image.size.width, encode_size.height / image.size.height)
         zoom_image_size = image.size * image_fit_scale
         if image.boxes:
@@ -92,13 +91,12 @@ def encode(
             # Normalized translation, -1..0..1
             translate_x = (2 * scaled_box.center[0] / zoom_image_size.width) - 1
             translate_y = (2 * scaled_box.center[1] / zoom_image_size.height) - 1
-            # Scale so box is object-fit=contain of the scaled image
+            # Scale so box is object-fit=contain of the encoded image
             zoom = min(
-                zoom_image_size.width / scaled_box.size.width,
-                zoom_image_size.height / scaled_box.size.height,
+                encode_size.width / scaled_box.size.width,
+                encode_size.height / scaled_box.size.height,
                 10,  # Max allowed ffmpeg zoom is 10
             )
-            # Don't start incrementing z until after the first frame
             z_filter = Filter(
                 "zoompan",
                 {
