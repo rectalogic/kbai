@@ -15,3 +15,13 @@ fix:
 typecheck:
 	@echo "🚀 mypy"
 	@-uv run mypy
+
+.PHONY: test
+test:
+	@echo "🚀 test"
+	@-uv run pytest
+
+.PHONY: encode
+encode:
+	@echo "🚀 run tests and encode"
+	@-uv run pytest -s --skip-mocks encode
