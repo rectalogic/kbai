@@ -12,6 +12,8 @@ def debug_image(image: Image.Image, boxes: Sequence[Box]) -> None:
     Draw outline boxes on the image
     """
     draw = ImageDraw.Draw(image)
+    print(image.size)
     for box in boxes:
+        print(box)
         draw.rectangle((box.xmin, box.ymin, box.xmax, box.ymax), outline="red")
     image.show()

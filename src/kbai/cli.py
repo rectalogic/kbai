@@ -92,7 +92,6 @@ def parse_size(value: str) -> Size:
 def build_encode_parser(subparsers: _SubParsersAction) -> None:
     parser = subparsers.add_parser("encode", description="Encode images with pan/zoom into a video.")
 
-    parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbose logging.")
     parser.add_argument("-o", "--output", help="Output video filename (with extension).")
     parser.add_argument("-r", "--framerate", type=int, default=25, help="Output video framerate (FPS).")
     parser.add_argument(
@@ -164,14 +163,15 @@ def build_detect_parser(subparsers: _SubParsersAction) -> None:
     parser.set_defaults(func=detect_main)
 
 
-def main() -> None:
+def main(args=None) -> None:
     # We fork/exec - disable "huggingface/tokenizers: The current process just got forked ..." warning
     os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
     parser = ArgumentParser(description="'Ken Burns' AI - automatic image pan and zoom.")
+    parser.add_argument("-v", "--verbose", action="count", default=0, help="Verbose logging.")
     subparsers = parser.add_subparsers(title="commands", required=True)
     build_encode_parser(subparsers)
     build_detect_parser(subparsers)
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     logging.basicConfig(level=max(logging.DEBUG, logging.ERROR - 10 * args.verbose))
     args.func(args)

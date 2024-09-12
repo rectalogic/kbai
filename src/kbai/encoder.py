@@ -94,8 +94,14 @@ def encode(
         if image.boxes:
             filterchain = FilterChain([], input_pads=[str(i)])
 
+            # Just use first box for now
+            # XXX look for highest threshold that matches requested feature?
+            scaled_box = image.boxes[0].scaled(image_fit_scale)
             if zoom_image_size != encode_size and image.fit is Fit.CONTAIN:
-                # XXX need to adjust box too - we pad left/top so coords are off
+                scaled_box = scaled_box.translated(
+                    (encode_size.width - zoom_image_size.width) / 2,
+                    (encode_size.height - zoom_image_size.height) / 2,
+                )
                 filterchain.filters.extend(
                     [
                         Filter(
@@ -110,16 +116,15 @@ def encode(
                             {
                                 "w": str(encode_size.width),
                                 "h": str(encode_size.height),
+                                # Centered
                                 "x": "-1",
                                 "y": "-1",
                             },
                         ),
                     ]
                 )
+                zoom_image_size = encode_size
 
-            # Just use first box for now
-            # XXX look for highest threshold that matches requested feature?
-            scaled_box = image.boxes[0].scaled(image_fit_scale)
             # Normalized translation, -1..0..1
             translate_x = (2 * scaled_box.center[0] / zoom_image_size.width) - 1
             translate_y = (2 * scaled_box.center[1] / zoom_image_size.height) - 1

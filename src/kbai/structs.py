@@ -65,6 +65,14 @@ class Box:
             self.ymax * scale,
         )
 
+    def translated(self, x: float, y: float) -> Box:
+        return Box(
+            self.xmin + x,
+            self.ymin + y,
+            self.xmax + x,
+            self.ymax + y,
+        )
+
 
 @dataclass(frozen=True)
 class AnnotatedBox(Box):
