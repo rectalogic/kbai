@@ -28,8 +28,9 @@ def enum_converter[ET: enum.Enum](ec: type[ET]) -> ta.Callable[[str], ET]:
 
 
 class ImageAction(Action):
-    image_parser = ArgumentParser(add_help=False)
-    image_parser.add_argument("image", help="Image url or path to detect features in.")
+    image_parser = ArgumentParser(prog="", add_help=False)
+    # Empty metavar to hide from usage, the image metavar is in the main parser
+    image_parser.add_argument("image", metavar="", help="Image url or path to detect features in.")
     image_parser.add_argument(
         "-id", dest="image_duration", type=float, default=SUPPRESS, help="Image duration in seconds."
     )
@@ -62,8 +63,7 @@ class ImageAction(Action):
     )  # XXX how can user specify None?
 
     def __init__(self, option_strings, dest: str, nargs: int | str | None = None, **kwargs) -> None:
-        if nargs is not None:
-            raise ValueError("nargs not allowed")
+        # Override nargs
         super().__init__(option_strings, dest=dest, nargs="+", **kwargs)
 
     def __call__(
@@ -80,8 +80,9 @@ class ImageAction(Action):
         images.append(image)
         setattr(namespace, self.dest, images)
 
-    def format_usage(self) -> str:
-        return self.image_parser.format_usage().replace("--", "/").replace("-", "/")
+    @classmethod
+    def reformat_usage(cls) -> str:
+        return cls.image_parser.format_usage().removeprefix("usage: ").replace("--", "/").replace("-", "/")
 
 
 def parse_size(value: str) -> Size:
@@ -147,9 +148,9 @@ def build_encode_parser(subparsers: _SubParsersAction) -> None:
         "-i",
         "--image",
         action=ImageAction,
-        required=True,  # help="Image filenames with options"
-        # XXX figure out help
-        help=ImageAction.image_parser.format_help(),
+        required=True,
+        metavar=("IMAGE", "IMAGE_OPTIONS"),
+        help=f"IMAGE_OPTIONS: {ImageAction.reformat_usage()}",
     )
     parser.set_defaults(func=encode_main)
 
