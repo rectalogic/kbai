@@ -117,7 +117,7 @@ def build_encode_parser(subparsers: _SubParsersAction) -> None:
         "--default-transition-name",
         dest="default_transition",
         type=enum_converter(Transition),
-        choices=[t.value for t in Transition],
+        choices=[t.name.lower() for t in Transition],
         default="fade",
         help="Default image transition name.",
     )
@@ -125,7 +125,7 @@ def build_encode_parser(subparsers: _SubParsersAction) -> None:
         "-dte",
         "--default-transition-easing",
         type=enum_converter(Easing),
-        choices=[t.value for t in Easing],
+        choices=[t.name.lower().replace("_", "-") for t in Easing],
         default="cubic-in-out",
         help="Default image easing name.",
     )
