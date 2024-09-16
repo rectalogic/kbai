@@ -108,7 +108,8 @@ def build_encode_parser(subparsers: _SubParsersAction) -> None:
         type=enum_converter(Fit),
         choices=[t.value for t in Fit],
         default="cover",
-        help="Default image fit (contain=scale to fit inside encoded size, cover=scale to fill entire encoded size).",
+        help="Default image fit (contain=scale to fit inside encoded size, "
+        "cover=scale to fill entire encoded size).",
     )
     parser.add_argument(
         "-did", "--default-image-duration", type=float, default=5, help="Default image duration."
