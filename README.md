@@ -24,5 +24,6 @@ $ uv run kbai encode -s 640x480 \
 Results in this video:
 
 
-https://github.com/user-attachments/assets/88713473-0ae3-4f7e-b217-802d98ee37ee
+https://github.com/user-attachments/assets/fba3e601-4a70-4573-bcbd-85f83c86fac8
+
 
