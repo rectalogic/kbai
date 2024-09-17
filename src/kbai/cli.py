@@ -6,7 +6,7 @@ import enum
 import logging
 import os
 import typing as ta
-from argparse import SUPPRESS, Action, ArgumentParser, Namespace
+from argparse import SUPPRESS, Action, ArgumentError, ArgumentParser, ArgumentTypeError, Namespace
 from collections.abc import Sequence
 
 from .easings import Easing
@@ -28,7 +28,7 @@ def enum_converter[ET: enum.Enum](ec: type[ET]) -> ta.Callable[[str], ET]:
 
 
 class ImageAction(Action):
-    image_parser = ArgumentParser(prog="", add_help=False)
+    image_parser = ArgumentParser(prog="", add_help=False, exit_on_error=False)
     # Empty metavar to hide from usage, the image metavar is in the main parser
     image_parser.add_argument("image", metavar="", help="Image url or path to detect features in.")
     image_parser.add_argument(
@@ -76,7 +76,12 @@ class ImageAction(Action):
         if not isinstance(values, Sequence):
             raise ValueError("values not a list")
         images = getattr(namespace, self.dest) or []
-        image = vars(self.image_parser.parse_args([values[0]] + [a.replace("/", "-") for a in values[1:]]))
+        try:
+            image = vars(
+                self.image_parser.parse_args([values[0]] + [a.replace("/", "-") for a in values[1:]])
+            )
+        except ArgumentError as e:
+            raise ArgumentError(self, e.message.replace("--", "/").replace("-", "/")) from e
         images.append(image)
         setattr(namespace, self.dest, images)
 
