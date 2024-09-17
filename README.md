@@ -22,3 +22,7 @@ $ uv run kbai encode -s 640x480 \
     -o multiple.mp4 
 ```
 Results in this video:
+
+
+https://github.com/user-attachments/assets/88713473-0ae3-4f7e-b217-802d98ee37ee
+
