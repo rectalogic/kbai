@@ -192,7 +192,8 @@ def encode(
 
     command.extend(["-filter_complex", str(filtergraph)])
 
-    command.extend(["-r", str(fps), "-s", str(encode_size), "-y", str(outfile)])
+    # yuv420p otherwise ffmpeg uses H.264 High 4:4:4 Profile, some players don't support that
+    command.extend(["-r", str(fps), "-s", str(encode_size), "-pix_fmt", "yuv420p", "-y", str(outfile)])
     subprocess.check_call(command)  # noqa: S603
     if verbose > 0:
         print(command)
